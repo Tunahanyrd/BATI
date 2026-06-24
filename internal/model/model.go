@@ -22,20 +22,20 @@ type Event struct {
 
 // Device represents details of the monitored power supply.
 type Device struct {
-	ID             string    `json:"id"` // Unique object path or identifier (e.g., /org/freedesktop/UPower/devices/battery_BAT0)
-	Vendor         string    `json:"vendor"`
-	Model          string    `json:"model"`
-	Serial         string    `json:"serial"`
-	DesignCapacity float64   `json:"design_capacity"` // Wh or mAh
-	FullCapacity   float64   `json:"full_capacity"`   // Wh or mAh
-	Technology     string    `json:"technology"`
-	CycleCount     int64     `json:"cycle_count"`
-	IsPowerSupply                 bool      `json:"is_power_supply"`
-	FirstSeen                     time.Time `json:"first_seen"`
-	LastSeen                      time.Time `json:"last_seen"`
-	ChargeLimitPercent            int       `json:"charge_limit_percent"`
-	ChargeLimitAvailable          bool      `json:"charge_limit_available"`
-	ChargeStartThresholdPercent   int       `json:"charge_start_threshold_percent"`
+	ID                          string    `json:"id"` // Unique object path or identifier (e.g., /org/freedesktop/UPower/devices/battery_BAT0)
+	Vendor                      string    `json:"vendor"`
+	Model                       string    `json:"model"`
+	Serial                      string    `json:"serial"`
+	DesignCapacity              float64   `json:"design_capacity"` // Wh or mAh
+	FullCapacity                float64   `json:"full_capacity"`   // Wh or mAh
+	Technology                  string    `json:"technology"`
+	CycleCount                  int64     `json:"cycle_count"`
+	IsPowerSupply               bool      `json:"is_power_supply"`
+	FirstSeen                   time.Time `json:"first_seen"`
+	LastSeen                    time.Time `json:"last_seen"`
+	ChargeLimitPercent          int       `json:"charge_limit_percent"`
+	ChargeLimitAvailable        bool      `json:"charge_limit_available"`
+	ChargeStartThresholdPercent int       `json:"charge_start_threshold_percent"`
 }
 
 // Session represents a segmented block of battery state (charging, discharging, sleeping, full, or not_charging).

@@ -20,14 +20,14 @@ type BatteryStatusDTO struct {
 
 // DeviceHealthDTO aggregates battery health metrics.
 type DeviceHealthDTO struct {
-	Available           bool    `json:"available"`
-	HealthAvailable     bool    `json:"health_available"`
-	CycleCountAvailable bool    `json:"cycle_count_available"`
-	Model               string  `json:"model"`
-	Vendor              string  `json:"vendor"`
-	DesignCapacity      float64 `json:"design_capacity"` // Wh
-	FullCapacity        float64 `json:"full_capacity"`   // Wh
-	HealthPct           float64 `json:"health_pct"`      // Health ratio (e.g. 92.4%)
+	Available                   bool    `json:"available"`
+	HealthAvailable             bool    `json:"health_available"`
+	CycleCountAvailable         bool    `json:"cycle_count_available"`
+	Model                       string  `json:"model"`
+	Vendor                      string  `json:"vendor"`
+	DesignCapacity              float64 `json:"design_capacity"` // Wh
+	FullCapacity                float64 `json:"full_capacity"`   // Wh
+	HealthPct                   float64 `json:"health_pct"`      // Health ratio (e.g. 92.4%)
 	CycleCount                  int64   `json:"cycle_count"`
 	Technology                  string  `json:"technology"`
 	ChargeLimitPercent          int     `json:"charge_limit_percent"`
@@ -134,27 +134,27 @@ type LiveBatteryDTO struct {
 
 // LiveSnapshotDTO represents the live current battery reading from sysfs/upower.
 type LiveSnapshotDTO struct {
-	Available                      bool      `json:"available"`
-	Source                         string    `json:"source"` // "sysfs" or "upower"
-	Timestamp                      time.Time `json:"timestamp"`
-	CapacityPercent                float64   `json:"capacity_percent"`
-	CapacityLevel                  string    `json:"capacity_level,omitempty"`
-	Status                         string    `json:"status"`
-	PowerRateW                     float64   `json:"power_rate_w,omitempty"`
-	PowerRateAvailable             bool      `json:"power_rate_available"`
-	VoltageV                       float64   `json:"voltage_v,omitempty"`
-	VoltageAvailable               bool      `json:"voltage_available"`
-	EnergyNowWh                    float64   `json:"energy_now_wh,omitempty"`
-	EnergyFullWh                   float64   `json:"energy_full_wh,omitempty"`
-	EnergyFullDesignWh             float64   `json:"energy_full_design_wh,omitempty"`
-	CycleCount                     int64     `json:"cycle_count,omitempty"`
-	Manufacturer                   string    `json:"manufacturer,omitempty"`
-	ModelName                      string    `json:"model_name,omitempty"`
-	Technology                     string    `json:"technology,omitempty"`
-	ChargeLimitPercent             int       `json:"charge_limit_percent,omitempty"`
-	ChargeLimitAvailable           bool      `json:"charge_limit_available"`
-	ChargeStartThresholdPercent    int       `json:"charge_start_threshold_percent,omitempty"`
-	ChargeStartThresholdAvailable  bool      `json:"charge_start_threshold_available"`
+	Available                     bool      `json:"available"`
+	Source                        string    `json:"source"` // "sysfs" or "upower"
+	Timestamp                     time.Time `json:"timestamp"`
+	CapacityPercent               float64   `json:"capacity_percent"`
+	CapacityLevel                 string    `json:"capacity_level,omitempty"`
+	Status                        string    `json:"status"`
+	PowerRateW                    float64   `json:"power_rate_w,omitempty"`
+	PowerRateAvailable            bool      `json:"power_rate_available"`
+	VoltageV                      float64   `json:"voltage_v,omitempty"`
+	VoltageAvailable              bool      `json:"voltage_available"`
+	EnergyNowWh                   float64   `json:"energy_now_wh,omitempty"`
+	EnergyFullWh                  float64   `json:"energy_full_wh,omitempty"`
+	EnergyFullDesignWh            float64   `json:"energy_full_design_wh,omitempty"`
+	CycleCount                    int64     `json:"cycle_count,omitempty"`
+	Manufacturer                  string    `json:"manufacturer,omitempty"`
+	ModelName                     string    `json:"model_name,omitempty"`
+	Technology                    string    `json:"technology,omitempty"`
+	ChargeLimitPercent            int       `json:"charge_limit_percent,omitempty"`
+	ChargeLimitAvailable          bool      `json:"charge_limit_available"`
+	ChargeStartThresholdPercent   int       `json:"charge_start_threshold_percent,omitempty"`
+	ChargeStartThresholdAvailable bool      `json:"charge_start_threshold_available"`
 }
 
 // HistoricalSnapshotDTO represents the latest historical sample from sqlite.
