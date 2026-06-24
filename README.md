@@ -43,7 +43,7 @@ systemctl --user enable --now batid.service
 batictl status
 ```
 
-The GUI depends on the normal Linux Wayland/X11/EGL libraries used by Gio applications. Package metadata declares the common runtime dependencies for `.deb`, `.rpm`, and `.apk` builds.
+The GUI depends on the normal Linux Wayland/X11/EGL/Vulkan loader libraries used by Gio applications. Package metadata declares the common runtime dependencies for `.deb`, `.rpm`, and `.apk` builds.
 
 ## Data
 

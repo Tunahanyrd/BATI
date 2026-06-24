@@ -96,6 +96,7 @@ nfpms:
         dependencies:
           - libegl1
           - libgles2
+          - libvulkan1
           - libwayland-client0
           - libwayland-cursor0
           - libwayland-egl1
@@ -109,6 +110,7 @@ nfpms:
         dependencies:
           - mesa-libEGL
           - mesa-libGLES
+          - vulkan-loader
           - wayland-libs
           - libxkbcommon
           - libxkbcommon-x11
@@ -119,6 +121,7 @@ nfpms:
         dependencies:
           - mesa-egl
           - mesa-gles
+          - vulkan-loader
           - wayland-libs-client
           - wayland-libs-cursor
           - wayland-libs-egl

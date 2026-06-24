@@ -26,6 +26,7 @@ jobs:
             desktop-file-utils \
             libegl1-mesa-dev \
             libgles2-mesa-dev \
+            libvulkan-dev \
             libwayland-dev \
             libx11-dev \
             libxcursor-dev \
