@@ -72,6 +72,7 @@ func GenerateSessions(database *db.DB, start, end time.Time) ([]Session, error) 
 			sleepIntervals = append(sleepIntervals, sleepInterval{start: intervalStart, end: end})
 		}
 	}
+	offlineIntervals := buildOfflineIntervals(database, events, start, end)
 
 	// Helper to check if a timestamp falls in a sleep interval (exclusive of end time)
 	inSleep := func(t time.Time) (bool, time.Time, time.Time) {
@@ -228,7 +229,110 @@ func GenerateSessions(database *db.DB, start, end time.Time) ([]Session, error) 
 		}
 	}
 
-	return ensureSleepSessions(database, sessions, sleepIntervals), nil
+	sessions = ensureSleepSessions(database, sessions, sleepIntervals)
+	return removeOfflineIntervals(database, sessions, offlineIntervals), nil
+}
+
+func buildOfflineIntervals(
+	database *db.DB,
+	events []model.Event,
+	start, end time.Time,
+) []sleepInterval {
+	var intervals []sleepInterval
+	var activeShutdown *time.Time
+
+	if lastEvent, err := database.GetLastEventBefore(start); err == nil && lastEvent.Type == "shutdown" {
+		t := lastEvent.Timestamp
+		activeShutdown = &t
+	}
+
+	for _, e := range events {
+		switch e.Type {
+		case "shutdown":
+			t := e.Timestamp
+			activeShutdown = &t
+		case "boot":
+			if activeShutdown == nil {
+				continue
+			}
+			intervalStart := maxTime(*activeShutdown, start)
+			intervalEnd := minTime(e.Timestamp, end)
+			if intervalEnd.After(intervalStart) {
+				intervals = append(intervals, sleepInterval{start: intervalStart, end: intervalEnd})
+			}
+			activeShutdown = nil
+		}
+	}
+
+	if activeShutdown != nil {
+		intervalStart := maxTime(*activeShutdown, start)
+		if end.After(intervalStart) {
+			intervals = append(intervals, sleepInterval{start: intervalStart, end: end})
+		}
+	}
+
+	return intervals
+}
+
+func removeOfflineIntervals(
+	database *db.DB,
+	sessions []Session,
+	intervals []sleepInterval,
+) []Session {
+	for _, interval := range intervals {
+		updated := make([]Session, 0, len(sessions)+1)
+		for _, session := range sessions {
+			if !session.EndTime.After(interval.start) || !session.StartTime.Before(interval.end) {
+				updated = append(updated, session)
+				continue
+			}
+
+			if session.StartTime.Before(interval.start) {
+				before := session
+				beforeEnd, beforePct := sessionBoundaryBefore(database, interval.start, session.StartTime, session.StartPct)
+				before.EndTime = beforeEnd
+				before.EndPct = beforePct
+				before.Duration = before.EndTime.Sub(before.StartTime)
+				before.DeltaPct = before.EndPct - before.StartPct
+				if before.Duration > 5*time.Second {
+					updated = append(updated, before)
+				}
+			}
+
+			if session.EndTime.After(interval.end) {
+				after := session
+				afterStart, afterPct := sessionBoundaryAfter(database, interval.end, session.EndTime, session.EndPct)
+				after.StartTime = afterStart
+				after.StartPct = afterPct
+				after.Duration = after.EndTime.Sub(after.StartTime)
+				after.DeltaPct = after.EndPct - after.StartPct
+				if after.Duration > 5*time.Second {
+					updated = append(updated, after)
+				}
+			}
+		}
+		sessions = updated
+	}
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].StartTime.Before(sessions[j].StartTime)
+	})
+	return sessions
+}
+
+func sessionBoundaryBefore(database *db.DB, target, lowerBound time.Time, fallbackPct float64) (time.Time, float64) {
+	point, err := database.GetLastTelemetryBefore(target)
+	if err == nil && !point.Timestamp.Before(lowerBound) && !point.Timestamp.After(target) {
+		return point.Timestamp, point.Capacity
+	}
+	return target, fallbackPct
+}
+
+func sessionBoundaryAfter(database *db.DB, target, upperBound time.Time, fallbackPct float64) (time.Time, float64) {
+	point, err := database.GetFirstTelemetryAfter(target)
+	if err == nil && !point.Timestamp.Before(target) && !point.Timestamp.After(upperBound) {
+		return point.Timestamp, point.Capacity
+	}
+	return target, fallbackPct
 }
 
 func ensureSleepSessions(

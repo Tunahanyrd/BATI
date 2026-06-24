@@ -225,6 +225,71 @@ func TestNotChargingStateCreatesNotChargingSession(t *testing.T) {
 	}
 }
 
+func TestShutdownBootGapCutsKnownSessions(t *testing.T) {
+	tempDir := t.TempDir()
+	database, err := db.Open(filepath.Join(tempDir, "shutdown-gap.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.InitSchema(); err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Date(2026, 6, 24, 10, 0, 0, 0, time.UTC)
+	shutdown := start.Add(20 * time.Minute)
+	boot := start.Add(90 * time.Minute)
+	beforeShutdown := shutdown.Add(-time.Minute)
+	afterBoot := boot.Add(time.Minute)
+	rangeEnd := boot.Add(10 * time.Minute)
+
+	if err := database.SaveTelemetryBatch([]model.Telemetry{
+		{Timestamp: start, Capacity: 85, Status: "Not charging", ScreenOn: true},
+		{Timestamp: beforeShutdown, Capacity: 85, Status: "Not charging", ScreenOn: true},
+		{Timestamp: afterBoot, Capacity: 84, Status: "Not charging", ScreenOn: true},
+		{Timestamp: rangeEnd, Capacity: 84, Status: "Not charging", ScreenOn: true},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SaveEvent(model.Event{Timestamp: shutdown, Type: "shutdown"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SaveEvent(model.Event{Timestamp: boot, Type: "boot"}); err != nil {
+		t.Fatal(err)
+	}
+
+	sessions, err := GenerateSessions(database, start, rangeEnd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var notCharging []Session
+	for _, session := range sessions {
+		if session.StartTime.Before(shutdown) && session.EndTime.After(boot) {
+			t.Fatalf("session must not span shutdown/boot gap: %+v", session)
+		}
+		if session.Type == "not_charging" {
+			notCharging = append(notCharging, session)
+		}
+	}
+	if len(notCharging) != 2 {
+		t.Fatalf("expected sessions on both sides of the offline gap, got %+v", sessions)
+	}
+	if !notCharging[0].EndTime.Equal(beforeShutdown) {
+		t.Fatalf("first session should stop at last telemetry before shutdown, got %+v", notCharging[0])
+	}
+	if !notCharging[1].StartTime.Equal(afterBoot) {
+		t.Fatalf("second session should start at first telemetry after boot, got %+v", notCharging[1])
+	}
+
+	summary, err := GenerateRangeSummary(database, start, rangeEnd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if summary.TotalDischarge != 0 || summary.TotalCharge != 0 {
+		t.Fatalf("offline capacity delta must not be counted as measured activity, got discharge=%.1f charge=%.1f", summary.TotalDischarge, summary.TotalCharge)
+	}
+}
+
 func TestSleepSessionExistsWithoutTelemetryDuringSuspend(t *testing.T) {
 	tempDir := t.TempDir()
 	database, err := db.Open(filepath.Join(tempDir, "sleep-gap.db"))
