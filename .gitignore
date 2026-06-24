@@ -1,0 +1,13 @@
+# Build artifacts
+/bin/
+/dist/
+/.gocache/
+/main
+*.test
+coverage.out
+*.prof
+
+# Local/editor files
+.DS_Store
+.idea/
+.vscode/

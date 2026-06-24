@@ -1,0 +1,147 @@
+version: 2
+
+project_name: bati
+
+builds:
+  - id: bati
+    main: ./cmd/bati
+    binary: bati
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+  - id: batid
+    main: ./cmd/batid
+    binary: batid
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+  - id: batictl
+    main: ./cmd/batictl
+    binary: batictl
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+archives:
+  - id: linux
+    ids:
+      - bati
+      - batid
+      - batictl
+    formats:
+      - tar.gz
+    name_template: "bati_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+      - packaging/desktop/bati.desktop
+      - packaging/systemd/user-system/batid.service
+      - packaging/icons/bati.svg
+
+nfpms:
+  - id: linux-packages
+    package_name: bati
+    file_name_template: "bati_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    ids:
+      - bati
+      - batid
+      - batictl
+    vendor: Tunahanyrd
+    homepage: https://github.com/Tunahanyrd/BATI
+    maintainer: Tunahanyrd
+    description: Linux battery analytics and timeline interface.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/bin
+    contents:
+      - src: packaging/desktop/bati.desktop
+        dst: /usr/share/applications/bati.desktop
+      - src: packaging/systemd/user-system/batid.service
+        dst: /usr/lib/systemd/user/batid.service
+      - src: packaging/icons/bati.svg
+        dst: /usr/share/icons/hicolor/scalable/apps/bati.svg
+      - src: README.md
+        dst: /usr/share/doc/bati/README.md
+      - src: LICENSE
+        dst: /usr/share/doc/bati/LICENSE
+    overrides:
+      deb:
+        dependencies:
+          - libegl1
+          - libgles2
+          - libwayland-client0
+          - libwayland-cursor0
+          - libwayland-egl1
+          - libxkbcommon0
+          - libxkbcommon-x11-0
+          - libx11-6
+          - libx11-xcb1
+          - libxcursor1
+          - libxfixes3
+      rpm:
+        dependencies:
+          - mesa-libEGL
+          - mesa-libGLES
+          - wayland-libs
+          - libxkbcommon
+          - libxkbcommon-x11
+          - libX11
+          - libXcursor
+          - libXfixes
+      apk:
+        dependencies:
+          - mesa-egl
+          - mesa-gles
+          - wayland-libs-client
+          - wayland-libs-cursor
+          - wayland-libs-egl
+          - libxkbcommon
+          - libxkbcommon-x11
+          - libx11
+          - libxcursor
+          - libxfixes
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: git
+  sort: asc
+
+release:
+  github:
+    owner: Tunahanyrd
+    name: BATI
+  draft: false
+  prerelease: false
+  name_template: "{{ .Tag }}"

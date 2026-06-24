@@ -1,0 +1,11 @@
+[Unit]
+Description=BATI telemetry daemon
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/batid
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

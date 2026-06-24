@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test And Package Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            desktop-file-utils \
+            libegl1-mesa-dev \
+            libgles2-mesa-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxfixes-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            pkg-config \
+            rpm
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l $(git ls-files '*.go'))"
+
+      - name: Check module tidiness
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Test
+        env:
+          GOFLAGS: -buildvcs=false
+        run: go test ./...
+
+      - name: Race test
+        env:
+          GOFLAGS: -buildvcs=false
+        run: go test -race ./...
+
+      - name: Vet
+        env:
+          GOFLAGS: -buildvcs=false
+        run: go vet ./...
+
+      - name: Build commands
+        env:
+          GOFLAGS: -buildvcs=false
+        run: |
+          go build -trimpath -ldflags="-s -w" -o bin/bati ./cmd/bati
+          go build -trimpath -ldflags="-s -w" -o bin/batid ./cmd/batid
+          go build -trimpath -ldflags="-s -w" -o bin/batictl ./cmd/batictl
+
+      - name: Validate install scripts and desktop entry
+        run: |
+          bash -n scripts/install-user-service.sh
+          bash -n scripts/uninstall-user-service.sh
+          desktop-file-validate packaging/desktop/bati.desktop
+
+      - name: GoReleaser snapshot
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --snapshot --clean --skip=publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

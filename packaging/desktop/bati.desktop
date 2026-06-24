@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=BATI
+Comment=Battery Analytics & Timeline Interface
+Exec=bati
+TryExec=bati
+Icon=bati
+Terminal=false
+Categories=System;Monitor;
+Keywords=battery;power;health;telemetry;
+StartupNotify=true
+StartupWMClass=BATI
