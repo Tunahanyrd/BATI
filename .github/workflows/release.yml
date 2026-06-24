@@ -29,6 +29,7 @@ jobs:
             libvulkan-dev \
             libwayland-dev \
             libx11-dev \
+            libx11-xcb-dev \
             libxcursor-dev \
             libxfixes-dev \
             libxkbcommon-dev \
