@@ -93,6 +93,9 @@ func ReadTelemetry(deviceID string, screenOn bool) (model.Telemetry, error) {
 	}
 
 	capacity := readFloatFile(filepath.Join(dirPath, "capacity"), -1.0)
+	if !model.ValidBatteryCapacity(capacity) {
+		return model.Telemetry{}, fmt.Errorf("invalid battery capacity %.2f from %s", capacity, filepath.Join(dirPath, "capacity"))
+	}
 	status := readStringFile(filepath.Join(dirPath, "status"), "Unknown")
 	voltage := readFloatFile(filepath.Join(dirPath, "voltage_now"), 0.0) / 1000000.0 // microV to V
 

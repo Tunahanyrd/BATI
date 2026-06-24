@@ -41,6 +41,10 @@ func (b *Batcher) AddTelemetry(p model.Telemetry) error {
 		b.mu.Unlock()
 		return errors.New("batcher is closed")
 	}
+	if !p.ValidCapacity() {
+		b.mu.Unlock()
+		return nil
+	}
 	b.buffer = append(b.buffer, p)
 
 	// If this is the first item in the buffer, start the timer

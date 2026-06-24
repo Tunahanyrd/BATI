@@ -297,8 +297,13 @@ func BuildTimelineDTO(
 	start, end time.Time,
 	use24h bool,
 ) dto.TimelineDTO {
+	validTelemetry := make([]model.Telemetry, 0, len(telemetry))
 	points := make([]dto.TimelinePointDTO, 0, len(telemetry))
 	for _, point := range telemetry {
+		if !point.ValidCapacity() {
+			continue
+		}
+		validTelemetry = append(validTelemetry, point)
 		points = append(points, dto.TimelinePointDTO{
 			Timestamp:  point.Timestamp,
 			Capacity:   point.Capacity,
@@ -310,7 +315,7 @@ func BuildTimelineDTO(
 	}
 
 	bars := buildScreenBars(start, end, use24h)
-	addScreenDurations(bars, telemetry, start, end)
+	addScreenDurations(bars, validTelemetry, start, end)
 
 	timeline := dto.TimelineDTO{
 		Start:    start,

@@ -1,6 +1,14 @@
 package model
 
-import "time"
+import (
+	"math"
+	"time"
+)
+
+const (
+	MinBatteryCapacityPercent = 0
+	MaxBatteryCapacityPercent = 100
+)
 
 // Telemetry represents a single battery reading snapshot.
 type Telemetry struct {
@@ -10,6 +18,17 @@ type Telemetry struct {
 	EnergyRate float64   `json:"energy_rate"` // Power consumption/charge rate in Watts (W)
 	Voltage    float64   `json:"voltage"`     // Battery voltage (V)
 	ScreenOn   bool      `json:"screen_on"`   // Calculated/estimated screen activity status
+}
+
+func ValidBatteryCapacity(value float64) bool {
+	return !math.IsNaN(value) &&
+		!math.IsInf(value, 0) &&
+		value >= MinBatteryCapacityPercent &&
+		value <= MaxBatteryCapacityPercent
+}
+
+func (t Telemetry) ValidCapacity() bool {
+	return ValidBatteryCapacity(t.Capacity)
 }
 
 // Event represents a system boundary event like sleep, resume, boot, or AC plug change.

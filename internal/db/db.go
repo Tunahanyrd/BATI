@@ -221,6 +221,7 @@ func (db *DB) GetLastFullChargeBefore(before time.Time) (model.Telemetry, error)
 		FROM telemetry
 		WHERE timestamp <= ?
 		  AND capacity >= 99.5
+		  AND capacity <= 100
 		  AND lower(replace(status, ' ', '_')) IN ('charging', 'full')
 		ORDER BY timestamp DESC
 		LIMIT 1
@@ -329,6 +330,9 @@ func (db *DB) saveTelemetryBatchTx(tx *sql.Tx, points []model.Telemetry) error {
 	defer stmt.Close()
 
 	for _, p := range points {
+		if !p.ValidCapacity() {
+			continue
+		}
 		_, err := stmt.Exec(
 			p.Timestamp.UTC().Format(TimeFormatNano),
 			p.Capacity,
@@ -351,6 +355,7 @@ func (db *DB) GetTelemetryRange(start, end time.Time) ([]model.Telemetry, error)
 		SELECT timestamp, capacity, status, energy_rate, voltage, screen_on
 		FROM telemetry
 		WHERE timestamp BETWEEN ? AND ?
+		  AND capacity BETWEEN 0 AND 100
 		ORDER BY timestamp ASC
 	`
 	rows, err := db.conn.Query(query, start.UTC().Format(TimeFormatNano), end.UTC().Format(TimeFormatNano))
@@ -473,6 +478,7 @@ func (db *DB) GetLastTelemetryBefore(t time.Time) (model.Telemetry, error) {
 		SELECT timestamp, capacity, status, energy_rate, voltage, screen_on
 		FROM telemetry
 		WHERE timestamp <= ?
+		  AND capacity BETWEEN 0 AND 100
 		ORDER BY timestamp DESC
 		LIMIT 1
 	`
@@ -503,6 +509,7 @@ func (db *DB) GetFirstTelemetryAfter(t time.Time) (model.Telemetry, error) {
 		SELECT timestamp, capacity, status, energy_rate, voltage, screen_on
 		FROM telemetry
 		WHERE timestamp >= ?
+		  AND capacity BETWEEN 0 AND 100
 		ORDER BY timestamp ASC
 		LIMIT 1
 	`

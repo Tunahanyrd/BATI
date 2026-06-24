@@ -157,6 +157,27 @@ func TestBuildTimelineDTOAggregation(t *testing.T) {
 	}
 }
 
+func TestBuildTimelineDTOFiltersInvalidCapacity(t *testing.T) {
+	start := time.Date(2026, 6, 24, 8, 0, 0, 0, time.UTC)
+	timeline := BuildTimelineDTO([]model.Telemetry{
+		{Timestamp: start, Capacity: 85, Status: "Discharging"},
+		{Timestamp: start.Add(time.Minute), Capacity: 1693139, Status: "Full"},
+		{Timestamp: start.Add(2 * time.Minute), Capacity: 84, Status: "Discharging"},
+	}, nil, start, start.Add(2*time.Minute), true)
+
+	if len(timeline.Points) != 2 {
+		t.Fatalf("expected invalid capacity to be filtered from timeline, got %+v", timeline.Points)
+	}
+	if !timeline.AvailableFrom.Equal(start) || !timeline.AvailableTo.Equal(start.Add(2*time.Minute)) {
+		t.Fatalf("unexpected timeline availability: %+v", timeline)
+	}
+	for _, point := range timeline.Points {
+		if point.Capacity < 0 || point.Capacity > 100 {
+			t.Fatalf("timeline kept invalid capacity: %+v", point)
+		}
+	}
+}
+
 func TestFetchDashboardDataEmptyDatabase(t *testing.T) {
 	tempDir := t.TempDir()
 	database, err := db.Open(filepath.Join(tempDir, "empty.db"))
