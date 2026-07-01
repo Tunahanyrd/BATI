@@ -3,7 +3,7 @@ module bati
 go 1.26.4
 
 require (
-	gioui.org v0.10.0
+	gioui.org v0.10.1
 	github.com/godbus/dbus/v5 v5.2.2
 	modernc.org/sqlite v1.53.0
 )
